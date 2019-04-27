@@ -71,8 +71,8 @@ void CloudMotor_Config(void)
     PID_Init(&gimbal_control.gimbal_yaw_motor.gimbal_motor_speed_pid,PID_POSITION,YAW_SpeedPID,YAW_SPEED_PID_MAX_OUT,YAW_SPEED_PID_MAX_IOUT);
     PID_Init(&gimbal_control.gimbal_yaw_motor.gimbal_motor_position_pid,PID_POSITION,YAW_PositionPID,YAW_ENCODE_RELATIVE_PID_MAX_OUT,YAW_ENCODE_RELATIVE_PID_MAX_IOUT);    
     //yaw电机限幅
-    gimbal_control.gimbal_yaw_motor.max_relative_angle = 0.4;//官方步兵： 旧步兵：0.8
-    gimbal_control.gimbal_yaw_motor.min_relative_angle = -0.4;//官方步兵： 旧步兵：-0.8
+    gimbal_control.gimbal_yaw_motor.max_relative_angle = 1.6;//官方步兵： 旧步兵：0.8
+    gimbal_control.gimbal_yaw_motor.min_relative_angle = -1.6;//官方步兵： 旧步兵：-0.8
     gimbal_control.gimbal_yaw_motor.offset_ecd = 360;//官方步兵320 旧步保壶4096
     //yaw电机数据初始化
     gimbal_control.gimbal_yaw_motor.relative_angle_set = 0;
@@ -156,11 +156,11 @@ void gimbal_behaviour_control_set(fp32 *add_yaw, fp32 *add_pitch, Gimbal_Control
     rc_deadline_limit(gimbal_control_set->gimbal_rc_ctrl->rc.ch[1], pitch_channel, RC_deadband);
 
     rc_add_yaw = yaw_channel * Yaw_RC_SEN + gimbal_control_set->gimbal_rc_ctrl->mouse.x * Yaw_Mouse_Sen;
-    rc_add_pit = -pitch_channel * Pitch_RC_SEN + gimbal_control_set->gimbal_rc_ctrl->mouse.y * Pitch_Mouse_Sen;
+    rc_add_pit = pitch_channel * Pitch_RC_SEN + gimbal_control_set->gimbal_rc_ctrl->mouse.y * Pitch_Mouse_Sen;
 
     //将控制增加量赋值
     *add_yaw = rc_add_yaw;
-    *add_pitch = rc_add_pit;
+    *add_pitch = -rc_add_pit;
 }
 //对数据进行限幅
 static void GIMBAL_relative_angle_limit(Gimbal_Motor_t *gimbal_motor, fp32 add)

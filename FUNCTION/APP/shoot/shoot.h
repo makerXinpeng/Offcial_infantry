@@ -29,7 +29,7 @@
 //鼠标长按判断
 #define PRESS_LONG_TIME 400
 //遥控器射击开关打下档一段时间后 连续发射子弹 用于清单
-#define RC_S_LONG_TIME 20
+#define RC_S_LONG_TIME 2000
 //摩擦轮高速 加速 时间
 #define UP_ADD_TIME 80
 //电机反馈码盘值范围
@@ -40,12 +40,12 @@
 #define Motor_ECD_TO_ANGLE 0.000021305288720633905968306772076277f
 #define FULL_COUNT 18
 //拨弹速度
-#define TRIGGER_SPEED 5.0f
+#define TRIGGER_SPEED 10.0f
 #define Ready_Trigger_Speed 6.0f
 
-#define KEY_OFF_JUGUE_TIME 200
-#define SWITCH_TRIGGER_ON 0   //开关按下
-#define SWITCH_TRIGGER_OFF 1  //开关开启
+#define KEY_OFF_JUGUE_TIME 500
+#define SWITCH_TRIGGER_ON 0   
+#define SWITCH_TRIGGER_OFF 1  
 
 //卡单时间 以及反转时间
 #define BLOCK_TIME 700
@@ -58,13 +58,13 @@
 //拨弹轮电机PID
 #define TRIGGER_ANGLE_PID_KP 800.0f
 #define TRIGGER_ANGLE_PID_KI 0.5f
-#define TRIGGER_ANGLE_PID_KD 30.0f
+#define TRIGGER_ANGLE_PID_KD 0.0f
 
 #define TRIGGER_BULLET_PID_MAX_OUT 15000.0f
 #define TRIGGER_BULLET_PID_MAX_IOUT 5000.0f
 
-#define TRIGGER_READY_PID_MAX_OUT 15000.0f//5000.0f
-#define TRIGGER_READY_PID_MAX_IOUT 5000.0f//2500.0f
+#define TRIGGER_READY_PID_MAX_OUT 5000.0f
+#define TRIGGER_READY_PID_MAX_IOUT 2500.0f
 
 typedef struct
 {

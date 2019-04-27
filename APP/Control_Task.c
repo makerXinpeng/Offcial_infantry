@@ -56,5 +56,4 @@ void Control_Task(RC_ctrl_t *Rc)
     }
     chassis_control_loop();
     CloudMotor_Ctrl();
-    shoot_control_loop();
 }

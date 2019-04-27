@@ -13,7 +13,7 @@ static PidTypeDef trigger_motor_pid;         //电机PID
 static Shoot_Motor_t trigger_motor;          //射击数据
 static shoot_mode_e shoot_mode = SHOOT_STOP; //射击状态机
 //微动开关IO
-#define Butten_Trig_Pin GPIO_ReadInputDataBit(GPIOF, GPIO_Pin_1)
+#define Butten_Trig_Pin GPIO_ReadInputDataBit(GPIOF, GPIO_Pin_10)
 
 /**
   * @brief          射击状态机设置，遥控器上拨一次开启，再上拨关闭，下拨1次发射1颗，一直处在下，则持续发射，用于3min准备时间清理子弹
@@ -65,7 +65,6 @@ void TriggerMotor_PID_Config(void)
     shoot_rc = get_remote_control_point();
     //电机指针
     trigger_motor.encoder1 = &TR1Encoder;
-    trigger_motor.encoder2 = &TR2Encoder;
     //初始化PID
     PID_Init(&trigger_motor_pid, PID_POSITION, Trigger_speed_pid, TRIGGER_READY_PID_MAX_OUT, TRIGGER_READY_PID_MAX_IOUT);
     //更新数据
@@ -96,25 +95,25 @@ int16_t shoot_control_loop(void)
     Shoot_Set_Mode();        //设置状态机
     Shoot_Feedback_Update(); //更新数据
 
-//    //发射状态控制
-//    if (shoot_mode == SHOOT_BULLET)
-//    {
-//        trigger_motor_pid.max_out = TRIGGER_BULLET_PID_MAX_OUT;
-//        trigger_motor_pid.max_iout = TRIGGER_BULLET_PID_MAX_IOUT;
-//        shoot_bullet_control();
-//    }
-//    //发射完成状态控制
-//    else if (shoot_mode == SHOOT_DONE)
-//    {
-//        shoot_done_control();
-//    }
-//    //发射准备状态控制
-//    else if (shoot_mode == SHOOT_READY)
-//    {
-//        trigger_motor_pid.max_out = TRIGGER_READY_PID_MAX_OUT;
-//        trigger_motor_pid.max_iout = TRIGGER_READY_PID_MAX_IOUT;
-//        shoot_ready_control();
-//    }
+    //发射状态控制
+    if (shoot_mode == SHOOT_BULLET)
+    {
+        trigger_motor_pid.max_out = TRIGGER_BULLET_PID_MAX_OUT;
+        trigger_motor_pid.max_iout = TRIGGER_BULLET_PID_MAX_IOUT;
+        shoot_bullet_control();
+    }
+    //发射完成状态控制
+    else if (shoot_mode == SHOOT_DONE)
+    {
+        shoot_done_control();
+    }
+    //发射准备状态控制
+    else if (shoot_mode == SHOOT_READY)
+    {
+        trigger_motor_pid.max_out = TRIGGER_READY_PID_MAX_OUT;
+        trigger_motor_pid.max_iout = TRIGGER_READY_PID_MAX_IOUT;
+        shoot_ready_control();
+    }
 
     if (shoot_mode == SHOOT_STOP)
     {
@@ -172,10 +171,10 @@ int16_t shoot_control_loop(void)
         shoot_fric1_on(fric_pwm1);
         shoot_fric2_on(fric_pwm2);
         
-        if(shoot_rc->mouse.press_l||shoot_rc->rc.s[0]==1)
-            trigger_motor.speed_set=5;
-        else
-            trigger_motor.speed_set=0;
+//        if(shoot_rc->mouse.press_l||shoot_rc->rc.s[0]==1)
+//            trigger_motor.speed_set=3;
+//        else
+//            trigger_motor.speed_set=0;
         //计算拨弹轮电机PID
         PID_Calc(&trigger_motor_pid, trigger_motor.speed, trigger_motor.speed_set);
 
@@ -246,17 +245,17 @@ static void Shoot_Set_Mode(void)
 static void Shoot_Feedback_Update(void)
 {
 
-//    static fp32 speed_fliter_1 = 0.0f;
-//    static fp32 speed_fliter_2 = 0.0f;
-//    static fp32 speed_fliter_3 = 0.0f;
+    static fp32 speed_fliter_1 = 0.0f;
+    static fp32 speed_fliter_2 = 0.0f;
+    static fp32 speed_fliter_3 = 0.0f;
 
-//    //拨弹轮电机速度滤波一下
-//    static const fp32 fliter_num[3] = {1.725709860247969f, -0.75594777109163436f, 0.030237910843665373f};
+    //拨弹轮电机速度滤波一下
+    static const fp32 fliter_num[3] = {1.725709860247969f, -0.75594777109163436f, 0.030237910843665373f};
 
-//    //二阶低通滤波
-//    speed_fliter_1 = speed_fliter_2;
-//    speed_fliter_2 = speed_fliter_3;
-//    speed_fliter_3 = speed_fliter_2 * fliter_num[0] + speed_fliter_1 * fliter_num[1] + (trigger_motor.encoder1->rpm * Motor_RMP_TO_SPEED) * fliter_num[2];
+    //二阶低通滤波
+    speed_fliter_1 = speed_fliter_2;
+    speed_fliter_2 = speed_fliter_3;
+    speed_fliter_3 = speed_fliter_2 * fliter_num[0] + speed_fliter_1 * fliter_num[1] + (trigger_motor.encoder1->rpm * Motor_RMP_TO_SPEED) * fliter_num[2];
 
     trigger_motor.speed = trigger_motor.encoder1->rpm * Motor_RMP_TO_SPEED;//speed_fliter_3;
 
