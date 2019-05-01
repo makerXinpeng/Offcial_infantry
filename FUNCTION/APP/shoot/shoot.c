@@ -15,6 +15,8 @@ static shoot_mode_e shoot_mode = SHOOT_STOP; //射击状态机
 //微动开关IO
 #define Butten_Trig_Pin GPIO_ReadInputDataBit(GPIOF, GPIO_Pin_10)
 
+extern int get_COUNT_CLOCK(void);
+
 /**
   * @brief          射击状态机设置，遥控器上拨一次开启，再上拨关闭，下拨1次发射1颗，一直处在下，则持续发射，用于3min准备时间清理子弹
   * @author         RM
@@ -400,7 +402,7 @@ static void shoot_ready_control(void)
         trigger_motor_pid.out = 0.0f;
         trigger_motor_pid.Iout = 0.0f;
 
-        //trigger_motor.speed_set = 0.0f;
+        trigger_motor.speed_set = 0.0f;
         trigger_motor.move_flag = 0;
         trigger_motor.key_time = 0;
     }
@@ -415,6 +417,7 @@ static void shoot_ready_control(void)
         if (trigger_motor.move_flag == 0)
         {
             trigger_motor.set_angle = rad_format(trigger_motor.set_angle + PI_Ten);
+            trigger_motor.cmd_time = get_COUNT_CLOCK();
             trigger_motor.move_flag = 1;
         }
 
@@ -422,6 +425,20 @@ static void shoot_ready_control(void)
         {
             //角度达到判断
             trigger_motor.speed_set = Ready_Trigger_Speed;
+            trigger_motor.run_time = get_COUNT_CLOCK();
+						if (trigger_motor.run_time < trigger_motor.cmd_time)
+						{
+								trigger_motor.cmd_time -= CLOCK_TIME;
+						}
+            //堵转判断
+            if (trigger_motor.run_time - trigger_motor.cmd_time > BLOCK_TIME && trigger_motor.run_time - trigger_motor.cmd_time < REVERSE_TIME + BLOCK_TIME && fabs(trigger_motor.speed) < REVERSE_SPEED_LIMIT)
+            {
+                trigger_motor.speed_set = -Ready_Trigger_Speed;
+            }
+            else if (trigger_motor.run_time - trigger_motor.cmd_time > REVERSE_TIME + BLOCK_TIME || fabs(trigger_motor.speed) > REVERSE_SPEED_LIMIT)
+            {
+                trigger_motor.cmd_time = get_COUNT_CLOCK();
+            }
         }
         else
         {

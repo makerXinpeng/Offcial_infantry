@@ -40,6 +40,13 @@
 //四个24v 输出 依次开启 间隔 709us
 #define POWER_CTRL_ONE_BY_ONE_TIME 709
 
+int COUNT_CLOCK = 0;
+int get_COUNT_CLOCK(void)
+{
+		return COUNT_CLOCK;
+}
+
+
 void BSP_init(void);
 
 int main(void)
@@ -89,5 +96,6 @@ void TIM6_DAC_IRQHandler(void)
         TIM_ClearITPendingBit(TIM6,TIM_IT_Update);
         TIM_ClearFlag(TIM6, TIM_FLAG_Update);
         Control_Task(get_remote_control_point());
+				COUNT_CLOCK = (++COUNT_CLOCK) % CLOCK_TIME;
     }
 }
