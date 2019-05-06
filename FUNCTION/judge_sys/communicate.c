@@ -84,7 +84,7 @@ void unpack_fifo_data(unpack_data_t *p_obj, uint8_t sof)		//解析协议帧队�
 
 							 if ( verify_crc16_check_sum(p_obj->protocol_packet, HEADER_LEN + CMD_LEN + p_obj->data_len + CRC_LEN) )	//通过crc16校验
 								{
-            if (sof == UP_REG_ID)	//再次判断是上传的自定义数据
+            if (sof == DN_REG_ID)	////再次判断是接收数据
             {
 //              pc_data_handler(p_obj->protocol_packet);
 //            }

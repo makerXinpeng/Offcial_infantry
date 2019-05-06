@@ -64,7 +64,7 @@ void BSP_init(void)
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);//设置系统中断优先级分组4
 
     laser_configuration();
-	  JudgeSystem_init();
+	JudgeSystem_init();
     
     CAN_Configure();
     Encoder_Start();
@@ -98,6 +98,6 @@ void TIM6_DAC_IRQHandler(void)
         TIM_ClearITPendingBit(TIM6,TIM_IT_Update);
         TIM_ClearFlag(TIM6, TIM_FLAG_Update);
         Control_Task(get_remote_control_point());
-				COUNT_CLOCK = (++COUNT_CLOCK) % CLOCK_TIME;
+        COUNT_CLOCK = (++COUNT_CLOCK) % CLOCK_TIME;
     }
 }

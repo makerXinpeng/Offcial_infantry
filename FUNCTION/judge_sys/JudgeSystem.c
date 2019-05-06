@@ -135,8 +135,6 @@ unpack_data_t p_obj;	//协议帧队列数据解析结构体
 		p_obj.data_fifo = JudgeSystemUart3_RXFIFO;	//准备解析协议帧
 		
 		unpack_fifo_data(&p_obj, DN_REG_ID);	//解析协议帧队列 判断数据类型（命令码）
-		
-
   } 
 } 
 
