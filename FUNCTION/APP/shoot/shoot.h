@@ -40,16 +40,16 @@
 #define Motor_ECD_TO_ANGLE 0.000021305288720633905968306772076277f
 #define FULL_COUNT 18
 //拨弹速度
-#define TRIGGER_SPEED 8.0f
-#define Ready_Trigger_Speed 5.0f
+#define TRIGGER_SPEED 10.0f
+#define Ready_Trigger_Speed 6.0f
 
-#define KEY_OFF_JUGUE_TIME 20//500
+#define KEY_OFF_JUGUE_TIME 10//500
 #define SWITCH_TRIGGER_ON 0   
 #define SWITCH_TRIGGER_OFF 1  
 
 //卡单时间 以及反转时间
-#define BLOCK_TIME 700
-#define REVERSE_TIME 500
+#define BLOCK_TIME 500
+#define REVERSE_TIME 200
 #define REVERSE_SPEED_LIMIT 13.0f
 
 #define PI_Four 0.78539816339744830961566084581988f

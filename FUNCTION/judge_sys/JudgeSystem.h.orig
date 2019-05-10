@@ -1,6 +1,6 @@
 
 #ifndef _JudgeSystem_H_
-#define _JudgeSystem_H_
+#define _JudgeSystem_H_	 
 
 #include "data_fifo.h"
 #include "protocol.h"

@@ -348,6 +348,16 @@ static void shoot_bullet_control(void)
     {
         //没到达一直设置旋转速度
         trigger_motor.speed_set = TRIGGER_SPEED;
+        trigger_motor.run_time = get_COUNT_CLOCK();
+                //堵转判断
+        if (trigger_motor.run_time - trigger_motor.cmd_time > BLOCK_TIME && trigger_motor.run_time - trigger_motor.cmd_time < REVERSE_TIME + BLOCK_TIME && fabs(trigger_motor.speed) < REVERSE_SPEED_LIMIT)
+        {
+            trigger_motor.speed_set = -Ready_Trigger_Speed;
+        }
+        else if (trigger_motor.run_time - trigger_motor.cmd_time > REVERSE_TIME + BLOCK_TIME || fabs(trigger_motor.speed) > REVERSE_SPEED_LIMIT)
+        {
+            trigger_motor.cmd_time = get_COUNT_CLOCK();
+        }
     }
     else
     {
