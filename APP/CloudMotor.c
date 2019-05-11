@@ -31,6 +31,12 @@
     }
     
 int16_t CloudOut[2];
+gimbal_mode_e GIMBAL_Mode = GIMBAL_MODE_HAND;
+PidTypeDef gimbal_motor_auto_angle_pid;
+		
+void GIMBAL_Set_Mode(void);
+		
+static void gimbal_motor_AUTO_control(Gimbal_Motor_t *gimbal_motor);
 
 //云台控制所有相关数据
 static Gimbal_Control_t gimbal_control;
@@ -51,6 +57,18 @@ static fp32 motor_ecd_to_angle_change(uint16_t ecd, uint16_t offset_ecd);
 //云台编码器控制
 static void gimbal_motor_relative_angle_control(Gimbal_Motor_t *gimbal_motor);
 
+void GIMBAL_Set_Mode(void)
+{
+		if (gimbal_control.gimbal_rc_ctrl->key.v & CLOUD_ON_KEYBOARD) 
+		{
+				GIMBAL_Mode = GIMBAL_MODE_AUTO;
+		}
+		else if (gimbal_control.gimbal_rc_ctrl->key.v & CLOUD_OFF_KEYBOARD)
+		{
+				GIMBAL_Mode = GIMBAL_MODE_HAND;
+		}
+}
+
 void CloudMotor_Config(void)
 {
     GIMBAL_Feedback_Update(&gimbal_control);
@@ -59,6 +77,8 @@ void CloudMotor_Config(void)
     static const fp32 YAW_PositionPID[3]= {YAW_ENCODE_RELATIVE_PID_KP,YAW_ENCODE_RELATIVE_PID_KI,YAW_ENCODE_RELATIVE_PID_KD};
     static const fp32 PITCH_SpeedPID[3]= {PITCH_SPEED_PID_KP,PITCH_SPEED_PID_KI,PITCH_SPEED_PID_KD};
     static const fp32 PITCH_PositionPID[3]= {PITCH_ENCODE_RELATIVE_PID_KP,PITCH_ENCODE_RELATIVE_PID_KI,PITCH_ENCODE_RELATIVE_PID_KD};
+		
+		static const fp32 AUTO_SpeedPID[3]= {AUTO_SPEED_PID_KP,AUTO_SPEED_PID_KI,AUTO_SPEED_PID_KD};
     
     //遥控器数据指针获取
     gimbal_control.gimbal_rc_ctrl = get_remote_control_point();
@@ -67,7 +87,10 @@ void CloudMotor_Config(void)
     gimbal_control.gimbal_yaw_motor.Gimbal_Encoder = &GMYawEncoder;
     gimbal_control.gimbal_pitch_motor.Gimbal_Encoder = &GMPitchEncoder;
     
-    //yaw电机PID初始化
+
+		PID_Init(&gimbal_motor_auto_angle_pid,PID_POSITION,AUTO_SpeedPID,AUTO_SPEED_PID_MAX_OUT,AUTO_SPEED_PID_MAX_IOUT);
+		
+		//yaw电机PID初始化
     PID_Init(&gimbal_control.gimbal_yaw_motor.gimbal_motor_speed_pid,PID_POSITION,YAW_SpeedPID,YAW_SPEED_PID_MAX_OUT,YAW_SPEED_PID_MAX_IOUT);
     PID_Init(&gimbal_control.gimbal_yaw_motor.gimbal_motor_position_pid,PID_POSITION,YAW_PositionPID,YAW_ENCODE_RELATIVE_PID_MAX_OUT,YAW_ENCODE_RELATIVE_PID_MAX_IOUT);    
     //yaw电机限幅
@@ -147,20 +170,27 @@ void gimbal_behaviour_control_set(fp32 *add_yaw, fp32 *add_pitch, Gimbal_Control
     {
         return;
     }
+		else if (GIMBAL_Mode == GIMBAL_MODE_AUTO)
+		{
+				*add_yaw = 
+				*add_pitch = -
+		}
+		else if (GIMBAL_Mode == GIMBAL_MODE_HAND)
+		{
+				static fp32 rc_add_yaw, rc_add_pit;
+				static int16_t yaw_channel = 0, pitch_channel = 0;
 
-    static fp32 rc_add_yaw, rc_add_pit;
-    static int16_t yaw_channel = 0, pitch_channel = 0;
+				//将遥控器的数据处理死区 int16_t yaw_channel,pitch_channel
+				rc_deadline_limit(gimbal_control_set->gimbal_rc_ctrl->rc.ch[4], yaw_channel, RC_deadband);
+				rc_deadline_limit(gimbal_control_set->gimbal_rc_ctrl->rc.ch[1], pitch_channel, RC_deadband);
 
-    //将遥控器的数据处理死区 int16_t yaw_channel,pitch_channel
-    rc_deadline_limit(gimbal_control_set->gimbal_rc_ctrl->rc.ch[4], yaw_channel, RC_deadband);
-    rc_deadline_limit(gimbal_control_set->gimbal_rc_ctrl->rc.ch[1], pitch_channel, RC_deadband);
+				rc_add_yaw = yaw_channel * Yaw_RC_SEN + gimbal_control_set->gimbal_rc_ctrl->mouse.x * Yaw_Mouse_Sen;
+				rc_add_pit = pitch_channel * Pitch_RC_SEN + gimbal_control_set->gimbal_rc_ctrl->mouse.y * Pitch_Mouse_Sen;
 
-    rc_add_yaw = yaw_channel * Yaw_RC_SEN + gimbal_control_set->gimbal_rc_ctrl->mouse.x * Yaw_Mouse_Sen;
-    rc_add_pit = pitch_channel * Pitch_RC_SEN + gimbal_control_set->gimbal_rc_ctrl->mouse.y * Pitch_Mouse_Sen;
-
-    //将控制增加量赋值
-    *add_yaw = rc_add_yaw;
-    *add_pitch = -rc_add_pit;
+				//将控制增加量赋值
+				*add_yaw = rc_add_yaw;
+				*add_pitch = -rc_add_pit;
+		}
 }
 //对数据进行限幅
 static void GIMBAL_relative_angle_limit(Gimbal_Motor_t *gimbal_motor, fp32 add)
@@ -199,17 +229,29 @@ void CloudMotor_Ctrl(void)
 {
     //云台电机数据更新
     GIMBAL_Feedback_Update(&gimbal_control);
+		GIMBAL_Set_Mode();
     GIMBAL_Set_Contorl(&gimbal_control);
     
     //
     //gimbal_control.gimbal_yaw_motor.relative_angle_set = gimbal_control.gimbal_rc_ctrl->rc.ch[4]*PI/660;
     //gimbal_control.gimbal_pitch_motor.relative_angle_set = gimbal_control.gimbal_rc_ctrl->rc.ch[1]*PI/660;
-    
-    gimbal_motor_relative_angle_control(&gimbal_control.gimbal_yaw_motor);//yaw
-    gimbal_motor_relative_angle_control(&gimbal_control.gimbal_pitch_motor);//pitch
-    
-    Yaw_Can_Set_Current = gimbal_control.gimbal_yaw_motor.gimbal_motor_speed_pid.out;
-    Pitch_Can_Set_Current = gimbal_control.gimbal_pitch_motor.gimbal_motor_speed_pid.out;
+		if (GIMBAL_Mode == GIMBAL_MODE_AUTO)
+		{
+			gimbal_motor_AUTO_control(&gimbal_control.gimbal_yaw_motor);//yaw
+			gimbal_motor_AUTO_control(&gimbal_control.gimbal_pitch_motor);//pitch
+			
+			Yaw_Can_Set_Current = gimbal_control.gimbal_yaw_motor.gimbal_motor_speed_pid.out;
+			Pitch_Can_Set_Current = gimbal_control.gimbal_pitch_motor.gimbal_motor_speed_pid.out;
+		}
+		else if(GIMBAL_Mode == GIMBAL_MODE_HAND)
+		{
+			gimbal_motor_relative_angle_control(&gimbal_control.gimbal_yaw_motor);//yaw
+			gimbal_motor_relative_angle_control(&gimbal_control.gimbal_pitch_motor);//pitch
+			
+			Yaw_Can_Set_Current = gimbal_control.gimbal_yaw_motor.gimbal_motor_speed_pid.out;
+			Pitch_Can_Set_Current = gimbal_control.gimbal_pitch_motor.gimbal_motor_speed_pid.out;
+		}
+		
     Shoot_Can_Set_Current = shoot_control_loop();
     
     Set_CloudMotor_Current(Yaw_Can_Set_Current,Pitch_Can_Set_Current,Shoot_Can_Set_Current);
@@ -219,6 +261,12 @@ static void gimbal_motor_relative_angle_control(Gimbal_Motor_t *gimbal_motor)
 {
     gimbal_motor->motor_gyro_set = GIMBAL_PID_Calc(&gimbal_motor->gimbal_motor_position_pid,gimbal_motor->relative_angle,gimbal_motor->relative_angle_set);
     gimbal_motor->gimbal_motor_speed_pid.out = PID_Calc(&gimbal_motor->gimbal_motor_speed_pid,gimbal_motor->motor_gyro,gimbal_motor->motor_gyro_set);
+}
+
+static void gimbal_motor_AUTO_control(Gimbal_Motor_t *gimbal_motor)
+{
+    gimbal_motor->motor_gyro_set = PID_Calc(&gimbal_motor_auto_angle_pid,(SENDINGFROM USART),0);
+    gimbal_motor->gimbal_motor_speed_pid.out = PID_Calc(&gimbal_motor_auto_angle_pid,gimbal_motor->motor_gyro,gimbal_motor->motor_gyro_set);
 }
 
 static fp32 GIMBAL_PID_Calc(PidTypeDef *pid, fp32 ref, fp32 set)
