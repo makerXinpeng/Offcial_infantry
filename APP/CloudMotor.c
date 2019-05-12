@@ -165,25 +165,20 @@ const Gimbal_Motor_t *get_pitch_motor_point(void)
   */
 void gimbal_behaviour_control_set(fp32 *add_yaw, fp32 *add_pitch, Gimbal_Control_t *gimbal_control_set)
 {
+				static fp32 rc_add_yaw, rc_add_pit;
+				static int16_t yaw_channel = 0, pitch_channel = 0;
+
 
     if (add_yaw == NULL || add_pitch == NULL || gimbal_control_set == NULL)
     {
         return;
     }
-		else if (GIMBAL_Mode == GIMBAL_MODE_AUTO)
-		{
-				*add_yaw = 
-				*add_pitch = -
-		}
 		else if (GIMBAL_Mode == GIMBAL_MODE_HAND)
 		{
-				static fp32 rc_add_yaw, rc_add_pit;
-				static int16_t yaw_channel = 0, pitch_channel = 0;
 
 				//将遥控器的数据处理死区 int16_t yaw_channel,pitch_channel
 				rc_deadline_limit(gimbal_control_set->gimbal_rc_ctrl->rc.ch[4], yaw_channel, RC_deadband);
 				rc_deadline_limit(gimbal_control_set->gimbal_rc_ctrl->rc.ch[1], pitch_channel, RC_deadband);
-
 				rc_add_yaw = yaw_channel * Yaw_RC_SEN + gimbal_control_set->gimbal_rc_ctrl->mouse.x * Yaw_Mouse_Sen;
 				rc_add_pit = pitch_channel * Pitch_RC_SEN + gimbal_control_set->gimbal_rc_ctrl->mouse.y * Pitch_Mouse_Sen;
 
@@ -266,7 +261,7 @@ static void gimbal_motor_relative_angle_control(Gimbal_Motor_t *gimbal_motor)
 static void gimbal_motor_AUTO_control(Gimbal_Motor_t *gimbal_motor)
 {
     gimbal_motor->motor_gyro_set = PID_Calc(&gimbal_motor_auto_angle_pid,(SENDINGFROM USART),0);
-    gimbal_motor->gimbal_motor_speed_pid.out = PID_Calc(&gimbal_motor_auto_angle_pid,gimbal_motor->motor_gyro,gimbal_motor->motor_gyro_set);
+    gimbal_motor->gimbal_motor_speed_pid.out = PID_Calc(&gimbal_motor->gimbal_motor_speed_pid,gimbal_motor->motor_gyro,gimbal_motor->motor_gyro_set);
 }
 
 static fp32 GIMBAL_PID_Calc(PidTypeDef *pid, fp32 ref, fp32 set)
