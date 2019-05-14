@@ -10,6 +10,14 @@
 #include "pid.h"
 #include "remote_control.h"
 #include "shoot.h"
+
+//自动射击 速度环 PID参数以及 PID最大输出，积分输出
+#define AUTO_SPEED_PID_KP 2000.0f//官方车：2000 旧步兵：900 英雄2000.0f
+#define AUTO_SPEED_PID_KI 20.0f
+#define AUTO_SPEED_PID_KD 0.0f
+#define AUTO_SPEED_PID_MAX_OUT 30000.0f
+#define AUTO_SPEED_PID_MAX_IOUT 5000.0f
+
 //pitch 速度环 PID参数以及 PID最大输出，积分输出
 #define PITCH_SPEED_PID_KP 2000.0f//官方车：2000 旧步兵：900 英雄2000.0f
 #define PITCH_SPEED_PID_KI 20.0f
@@ -53,6 +61,16 @@
 #define YAW_ENCODE_RELATIVE_PID_KD 30.0f
 #define YAW_ENCODE_RELATIVE_PID_MAX_OUT 18.0f
 #define YAW_ENCODE_RELATIVE_PID_MAX_IOUT 0.0f
+
+//GIMBAL模式定义
+typedef enum
+{
+    GIMBAL_MODE_HAND = 0,
+    GIMBAL_MODE_AUTO,
+} gimbal_mode_e;
+
+#define CLOUD_ON_KEYBOARD KEY_PRESSED_OFFSET_X
+#define CLOUD_OFF_KEYBOARD KEY_PRESSED_OFFSET_Z
 
 //任务初始化 空闲一段时间
 #define GIMBAL_TASK_INIT_TIME 201
@@ -157,7 +175,7 @@ typedef struct
     //const motor_measure_t *gimbal_motor_measure;
     volatile Encoder *Gimbal_Encoder;
     Gimbal_PID_t gimbal_motor_absolute_angle_pid;   
-    Gimbal_PID_t gimbal_motor_relative_angle_pid;   
+    Gimbal_PID_t gimbal_motor_relative_angle_pid;
     PidTypeDef gimbal_motor_position_pid;            //电机位置环PID
     PidTypeDef gimbal_motor_speed_pid;               //电机速度环PID
     PidTypeDef gimbal_motor_gyro_pid;
@@ -202,6 +220,7 @@ typedef struct
     Gimbal_Motor_t gimbal_pitch_motor;
     Gimbal_Cali_t gimbal_cali;
 } Gimbal_Control_t;
+
 
 extern Gimbal_Control_t gimbal_control;
 extern volatile Encoder GMYawEncoder;
