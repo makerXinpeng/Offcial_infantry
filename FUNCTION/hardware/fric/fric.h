@@ -7,7 +7,7 @@
 //MT4114 1850
 
 #define Fric_UP 1700
-#define Fric_DOWN 1600
+#define Fric_DOWN 1700
 #define Fric_OFF 1000
 
 extern void fric_PWM_configuration(void);

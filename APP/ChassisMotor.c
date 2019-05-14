@@ -94,6 +94,8 @@ void chassis_control_loop(void)
     for (i = 0; i < 4; i++)
     {
         chassis_move.motor_chassis[i].give_current = (int16_t)(chassis_move.motor_speed_pid[i].out);
+                if(chassis_move.motor_chassis[i].give_current>MAX_MOTOR_CAN_CURRENT)
+            chassis_move.motor_chassis[i].give_current=MAX_MOTOR_CAN_CURRENT;
     }
     Set_ChassisMotor_Current(chassis_move.motor_chassis[0].give_current,
                              chassis_move.motor_chassis[1].give_current,
