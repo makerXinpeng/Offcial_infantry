@@ -31,7 +31,6 @@
     }
     
 int16_t CloudOut[2];
-gimbal_mode_e GIMBAL_Mode = GIMBAL_MODE_HAND;
 PidTypeDef gimbal_motor_auto_angle_pid;
 		
 void GIMBAL_Set_Mode(void);
@@ -170,11 +169,6 @@ void gimbal_behaviour_control_set(fp32 *add_yaw, fp32 *add_pitch, Gimbal_Control
     {
         return;
     }
-		else if (GIMBAL_Mode == GIMBAL_MODE_AUTO)
-		{
-				*add_yaw = 
-				*add_pitch = -
-		}
 		else if (GIMBAL_Mode == GIMBAL_MODE_HAND)
 		{
 				static fp32 rc_add_yaw, rc_add_pit;

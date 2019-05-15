@@ -69,6 +69,8 @@ typedef enum
     GIMBAL_MODE_AUTO,
 } gimbal_mode_e;
 
+extern gimbal_mode_e GIMBAL_Mode = GIMBAL_MODE_HAND;
+
 #define CLOUD_ON_KEYBOARD KEY_PRESSED_OFFSET_X
 #define CLOUD_OFF_KEYBOARD KEY_PRESSED_OFFSET_Z
 
